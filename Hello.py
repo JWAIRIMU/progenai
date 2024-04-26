@@ -1,51 +1,65 @@
-# Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# This is app is created by Joseph Njuguna
 
 import streamlit as st
-from streamlit.logger import get_logger
+from stmol import showmol
+import py3Dmol
+import requests
+import biotite.structure.io as bsio
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
-LOGGER = get_logger(__name__)
+#st.set_page_config(layout = 'wide')
+st.sidebar.title('🎈 ProGenAI')
+st.sidebar.write('[*ProGenAI*](https://esmatlas.com/about) is an end-to-end single sequence protein structure predictor based on the ESM-2 language model. For more information, read the [research article](https://www.biorxiv.org/content/10.1101/2022.07.20.500902v2) and the [news article](https://www.nature.com/articles/d41586-022-03539-1) published in *Nature*.')
 
+# stmol
+def render_mol(pdb):
+    pdbview = py3Dmol.view()
+    pdbview.addModel(pdb,'pdb')
+    pdbview.setStyle({'cartoon':{'color':'spectrum'}})
+    pdbview.setBackgroundColor('white')#('0xeeeeee')
+    pdbview.zoomTo()
+    pdbview.zoom(2, 800)
+    pdbview.spin(True)
+    showmol(pdbview, height = 500,width=800)
 
-def run():
-    st.set_page_config(
-        page_title="Hello",
-        page_icon="👋",
+# Protein sequence input
+DEFAULT_SEQ = "MGSSHHHHHHSSGLVPRGSHMRGPNPTAASLEASAGPFTVRSFTVSRPSGYGAGTVYYPTNAGGTVGAIAIVPGYTARQSSIKWWGPRLASHGFVVITIDTNSTLDQPSSRSSQQMAALRQVASLNGTSSSPIYGKVDTARMGVMGWSMGGGGSLISAANNPSLKAAAPQAPWDSSTNFSSVTVPTLIFACENDSIAPVNSSALPIYDSMSRNAKQFLEINGGSHSCANSGNSNQALIGKKGVAWMKRFMDNDTRYSTFACENPNSTRVSDFRTANCSLEDPAANKARKEAELAAATAEQ"
+txt = st.sidebar.text_area('Input sequence', DEFAULT_SEQ, height=275)
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+# ProGenAI
+def update(sequence=txt):
+    headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+    }
+    response = requests.post('https://api.esmatlas.com/foldSequence/v1/pdb/', headers=headers, data=sequence,verify=False)
+    name = sequence[:3] + sequence[-3:]
+    pdb_string = response.content.decode('utf-8')
+
+    with open('predicted.pdb', 'w') as f:
+        f.write(pdb_string)
+
+    struct = bsio.load_structure('predicted.pdb', extra_fields=["b_factor"])
+    b_value = round(struct.b_factor.mean(), 4)
+
+    # Display protein structure
+    st.subheader('Visualization of predicted protein structure')
+    render_mol(pdb_string)
+
+    # plDDT value is stored in the B-factor field
+    st.subheader('plDDT')
+    st.write('plDDT is a per-residue estimate of the confidence in prediction on a scale from 0-100.')
+    st.info(f'plDDT: {b_value}')
+
+    st.download_button(
+        label="Download PDB",
+        data=pdb_string,
+        file_name='predicted.pdb',
+        mime='text/plain',
     )
 
-    st.write("# Welcome to Streamlit! 👋")
-
-    st.sidebar.success("Select a demo above.")
-
-    st.markdown(
-        """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-    """
-    )
+predict = st.sidebar.button('Predict', on_click=update)
 
 
-if __name__ == "__main__":
-    run()
+if not predict:
+    st.warning('👈 Enter protein sequence data!')

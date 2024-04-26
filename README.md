@@ -1,7 +1,13 @@
-# Welcome to streamlit
+🎈 ProGenAI
+ProGenAI is an end-to-end single sequence protein structure predictor based on the ESM-2 language model.
 
-This is the app you get when you run `streamlit hello`, extracted as its own app.
+Demo App
+Streamlit App
 
-Edit [Hello.py](./Hello.py) to customize this app to your heart's desire. ❤️
 
-Check it out on [Streamlit Community Cloud](https://st-hello-app.streamlit.app/)
+References
+For more information, read the following articles:
+
+ESM Metagenomic Atlas: The first view of the ‘dark matter’ of the protein universe
+Evolutionary-scale prediction of atomic level protein structure with a language model
+AlphaFold’s new rival? Meta AI predicts shape of 600 million proteins
