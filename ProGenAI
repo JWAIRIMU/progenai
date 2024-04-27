@@ -26,6 +26,12 @@ def render_mol(pdb):
 DEFAULT_SEQ = "MGSSHHHHHHSSGLVPRGSHMRGPNPTAASLEASAGPFTVRSFTVSRPSGYGAGTVYYPTNAGGTVGAIAIVPGYTARQSSIKWWGPRLASHGFVVITIDTNSTLDQPSSRSSQQMAALRQVASLNGTSSSPIYGKVDTARMGVMGWSMGGGGSLISAANNPSLKAAAPQAPWDSSTNFSSVTVPTLIFACENDSIAPVNSSALPIYDSMSRNAKQFLEINGGSHSCANSGNSNQALIGKKGVAWMKRFMDNDTRYSTFACENPNSTRVSDFRTANCSLEDPAANKARKEAELAAATAEQ"
 txt = st.sidebar.text_area('Input sequence', DEFAULT_SEQ, height=275)
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+upload_file = st.sidebar.file_uploader("Upload a file", type=["txt"])
+sequence_input = None 
+if upload_file is not None:
+    # Read uploaded file into a string
+    upload_sequence = upload_file.read().decode("utf-8")
+    sequence_input = upload_sequence
 
 # ProGenAI
 def update(sequence=txt):
@@ -60,6 +66,14 @@ def update(sequence=txt):
 
 predict = st.sidebar.button('Predict', on_click=update)
 
-
-if not predict:
-    st.warning('👈 Enter protein sequence data!')
+#if not predict:
+    #st.warning('👈 Enter protein sequence data!')
+    
+if predict:
+    update(sequence_input)
+elif sequence_input:
+    # Automatically trigger prediction if text input is not empty
+    update(sequence_input)
+else:
+    # Display warning if no sequence is provided
+    st.warning('Please input a sequence or upload a sequence file.')
