@@ -3,7 +3,7 @@ ProGenAI is an end-to-end single sequence protein structure predictor based on t
 
 Demo App
 Streamlit App
-
+https://silver-telegram-pjrrqj9455jjf76v6-8501.app.github.dev/
 
 References
 For more information, read the following articles:
